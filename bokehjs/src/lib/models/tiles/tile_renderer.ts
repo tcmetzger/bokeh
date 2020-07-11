@@ -17,6 +17,8 @@ import {SelectionManager} from "core/selection_manager"
 import {ColumnDataSource} from "../sources/column_data_source"
 
 import {bk_tile_attribution} from "styles/tiles"
+
+import root_css from "styles/root.css"
 import tiles_css from "styles/tiles.css"
 
 export type TileData = Tile & ({img: Image, loaded: true} | {img: undefined, loaded: false}) & {
@@ -56,7 +58,7 @@ export class TileRendererView extends DataRendererView {
   }
 
   styles(): string[] {
-    return [...super.styles(), tiles_css]
+    return [/*...super.styles(),*/ root_css, tiles_css]
   }
 
   get_extent(): Extent {

@@ -8,7 +8,6 @@ export type HTMLChild = HTMLItem | HTMLItem[]
 const _createElement = <T extends keyof HTMLElementTagNameMap>(tag: T) => {
   return (attrs: HTMLAttrs = {}, ...children: HTMLChild[]): HTMLElementTagNameMap[T] => {
     const element = document.createElement(tag)
-    element.classList.add("bk")
 
     for (const attr in attrs) {
       let value = attrs[attr]
@@ -98,7 +97,7 @@ export function nbsp(): Text {
   return document.createTextNode("\u00a0")
 }
 
-export function append(element: HTMLElement, ...children: Element[]): void {
+export function append(element: Node, ...children: Node[]): void {
   for (const child of children)
     element.appendChild(child)
 }
@@ -126,16 +125,25 @@ export function prepend(element: HTMLElement, ...nodes: Node[]): void {
   }
 }
 
-export function empty(element: HTMLElement, attrs: boolean = false): void {
-  let child: ChildNode | null
+export function empty(element: Node, ...to_keep: Node[]): void {
+  let child: Node | null = null
   while (child = element.firstChild) {
     element.removeChild(child)
   }
-  if (attrs) {
-    for (const attr of element.attributes) {
-      element.removeAttributeNode(attr)
-    }
+  for (const node of to_keep) {
+    element.appendChild(node)
   }
+}
+
+export function parent(el: Element): Element | null {
+  const {parentElement, parentNode} = el
+  if (parentElement != null)
+    return parentElement
+  if (parentNode != null) {
+    if (parentNode instanceof ShadowRoot)
+      return parentNode.host
+  }
+  return null
 }
 
 export function display(element: HTMLElement): void {
@@ -166,17 +174,6 @@ export function matches(el: HTMLElement, selector: string): boolean {
   const p: any = Element.prototype
   const f = p.matches || p.webkitMatchesSelector || p.mozMatchesSelector || p.msMatchesSelector
   return f.call(el, selector)
-}
-
-export function parent(el: HTMLElement, selector: string): HTMLElement | null {
-  let node: HTMLElement | null = el
-
-  while (node = node.parentElement) {
-    if (matches(node, selector))
-      return node
-  }
-
-  return null
 }
 
 function num(value: string | null): number {
@@ -380,22 +377,3 @@ export function sized<T>(el: HTMLElement, size: Partial<Size>, fn: () => T): T {
     el.style.height = height
   }
 }
-
-export class StyleSheet {
-  private readonly style: HTMLStyleElement
-  private readonly known: Set<string> = new Set()
-
-  constructor(readonly root: HTMLElement) {
-    this.style = style({type: "text/css"})
-    prepend(root, this.style)
-  }
-
-  append(css: string): void {
-    if (!this.known.has(css)) {
-      this.style.appendChild(document.createTextNode(css))
-      this.known.add(css)
-    }
-  }
-}
-
-export const stylesheet = new StyleSheet(document.head)

@@ -1,8 +1,11 @@
-import {div, classes, display, undisplay, empty, remove, append, Keys} from "../dom"
+import {div, style, classes, parent, display, undisplay, empty, remove, append, Keys} from "../dom"
 import {Orientation} from "../enums"
 
-//import menus_css from "styles/menus.css"
 import * as styles from "styles/menus"
+
+import root_css from "styles/root.css"
+import menus_css from "styles/menus.css"
+import icons_css from "styles/icons.css"
 
 export type ScreenPoint = {left?: number, right?: number, top?: number, bottom?: number}
 
@@ -21,7 +24,10 @@ export type MenuOptions = {
 
 export class ContextMenu {
 
-  readonly el: HTMLElement = div()
+  readonly el: HTMLElement
+  readonly shadow_el: ShadowRoot
+  readonly stylesheet_el: HTMLStyleElement
+
   protected _open: boolean = false
 
   get is_open(): boolean {
@@ -33,6 +39,10 @@ export class ContextMenu {
   }
 
   constructor(readonly items: MenuItem[], readonly options: MenuOptions = {}) {
+    this.el = div()
+    this.shadow_el = this.el.attachShadow({mode: "open"})
+    this.stylesheet_el = style({}, ...this.styles())
+    this.shadow_el.appendChild(this.stylesheet_el)
     undisplay(this.el)
   }
 
@@ -42,8 +52,9 @@ export class ContextMenu {
   }
 
   protected _on_mousedown = (event: MouseEvent) => {
-    const {target} = event
-    if (target instanceof Node && this.el.contains(target))
+    const [target] = event.composedPath()
+    // const {target} = event
+    if (target instanceof Node && this.shadow_el.contains(target))
       return
 
     if (this.options.prevent_hide?.(event))
@@ -79,7 +90,7 @@ export class ContextMenu {
   }
 
   protected _position(at: ScreenPoint): void {
-    const parent_el = this.el.parentElement
+    const parent_el = parent(this.el)
     if (parent_el != null) {
       const parent = parent_el.getBoundingClientRect()
       this.el.style.left = at.left != null ? `${at.left - parent.left}px` : ""
@@ -89,22 +100,21 @@ export class ContextMenu {
     }
   }
 
-  /*
   styles(): string[] {
-    return [...super.styles(), menus_css]
+    return [/*...super.styles()*/ root_css, menus_css, icons_css]
   }
-  */
 
   render(): void {
-    empty(this.el, true)
+    empty(this.shadow_el, this.stylesheet_el)
+
     const orientation = this.options.orientation ?? "vertical"
     classes(this.el).add("bk-context-menu", `bk-${orientation}`)
 
-    append(this.el, ...this.items.map((item, i) => {
+    append(this.shadow_el, ...this.items.map((item, i) => {
       let el: HTMLElement
       if (item != null) {
         const icon = item.icon != null ? div({class: ["bk-menu-icon", item.icon]}) : null
-        el = div({class: item.active?.() ? "bk-active": null, title: item.tooltip}, icon, item.label)
+        el = div({class: ["bk-item", item.active?.() ? "bk-active": null], title: item.tooltip}, icon, item.label)
       } else {
         el = div({class: styles.bk_divider})
       }
