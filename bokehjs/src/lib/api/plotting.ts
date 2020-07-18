@@ -113,6 +113,7 @@ export type RayArgs           = GlyphArgs<models.Ray.Props>           & AuxLine
 export type RectArgs          = GlyphArgs<models.Rect.Props>          & AuxLine & AuxFill
 export type ScatterArgs       = GlyphArgs<models.Scatter.Props>       & AuxLine & AuxFill
 export type SegmentArgs       = GlyphArgs<models.Segment.Props>       & AuxLine
+export type SplineArgs        = GlyphArgs<models.Spline.Props>        & AuxLine
 export type StepArgs          = GlyphArgs<models.Step.Props>          & AuxLine
 export type TextArgs          = GlyphArgs<models.Text.Props>                              & AuxText
 export type VAreaArgs         = GlyphArgs<models.VArea.Props>                   & AuxFill
@@ -466,6 +467,15 @@ export class Figure extends Plot {
     args?: Partial<SegmentArgs>): GlyphRenderer
   segment(...args: unknown[]): GlyphRenderer {
     return this._glyph(models.Segment, "x0,y0,x1,y1", args)
+  }
+
+  spline(args: Partial<SplineArgs>): GlyphRenderer
+  spline(
+    x: SplineArgs["x"],
+    y: SplineArgs["y"],
+    args?: Partial<SplineArgs>): GlyphRenderer
+  spline(...args: unknown[]): GlyphRenderer {
+    return this._glyph(models.Spline, "x,y", args)
   }
 
   step(args: Partial<StepArgs>): GlyphRenderer
